@@ -19,21 +19,20 @@ def upload_image(request):
 
     try:
         # Generate a temporary file and store it in Cloud Storage
-        temp_file = tempfile.NamedTemporaryFile(delete=False)
-        file.save(temp_file)
-        
-        # Define the destination path in your GCP bucket
-        blob = bucket.blob(f"uploads/{file.filename}")
-        blob.upload_from_filename(temp_file.name)
-        
-        # Make the file publicly accessible
-        blob.make_public()
+        with tempfile.NamedTemporaryFile(delete=True) as temp_file:
+            file.save(temp_file)
+            temp_file.flush()  # Ensure data is written before upload
 
-        # Cleanup temporary file
-        os.remove(temp_file.name)
+            # Define the destination path in your GCP bucket
+            blob = bucket.blob(f"uploads/{file.filename}")
+            blob.upload_from_filename(temp_file.name)
+            
+            # Make the file publicly accessible
+            blob.make_public()
 
         # Return the public URL of the uploaded file
         return jsonify({'image_url': blob.public_url}), 200
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Log error to Cloud Logging (optional) before returning a generic error message
+        return jsonify({'error': 'An error occurred while uploading the image'}), 500
