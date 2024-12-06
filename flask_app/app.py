@@ -76,4 +76,4 @@ def list_processed_images():
 if __name__ == '__main__':
     # Make sure to set the GOOGLE_APPLICATION_CREDENTIALS environment variable
     # Example: export GOOGLE_APPLICATION_CREDENTIALS="path/to/your/credentials.json"
-    app.run(host='0.0.0.0', port=8080, debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=True) 
