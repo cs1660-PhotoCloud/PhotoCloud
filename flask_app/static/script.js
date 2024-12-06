@@ -39,4 +39,48 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   });
+
+  document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
   
+    const fileInput = document.getElementById('fileInput');
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+  
+    try {
+      const response = await fetch('/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const result = await response.json();
+      const resultDiv = document.getElementById('result');
+  
+      if (result.url) {
+        resultDiv.innerHTML = `<p>File uploaded! <a href="${result.url}" target="_blank">View Image</a></p>`;
+      } else {
+        resultDiv.innerHTML = `<p>Error: ${result.error}</p>`;
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  });
+  
+  // Example for processing the image
+  async function processImage(filename, filter) {
+    try {
+      const response = await fetch('/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename, filter }),
+      });
+      const result = await response.json();
+  
+      if (result.url) {
+        console.log(`Processed image URL: ${result.url}`);
+      } else {
+        console.error(result.error);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
