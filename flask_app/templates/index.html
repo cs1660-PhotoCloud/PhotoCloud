@@ -1,22 +1,47 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Image Processing Service</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Processing Service</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
+  <div class="container">
     <h1>Upload and Process Your Image</h1>
+
+    <!-- Flask Form for Server-Side Upload -->
     <form action="/" method="post" enctype="multipart/form-data">
-        <input type="file" name="image" required>
-        <select name="filter" required>
-            <option value="BLUR">Blur</option>
-            <option value="CONTOUR">Contour</option>
-        </select>
-        <button type="submit">Process</button>
+      <input type="file" id="imageUpload" name="image" accept="image/*" required>
+      <select name="filter" id="filterSelect" required>
+        <option value="BLUR">Blur</option>
+        <option value="CONTOUR">Contour</option>
+        <option value="grayscale">Grayscale</option>
+        <option value="sepia">Sepia</option>
+        <option value="invert">Invert</option>
+      </select>
+      <button type="submit">Process</button>
     </form>
+
+    <!-- Error Message from Flask -->
+    {% if error %}
+    <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <!-- Client-Side Preview -->
+    <div id="preview-section" class="hidden">
+      <h2>Preview</h2>
+      <img id="imagePreview" alt="Image Preview">
+    </div>
+
+    <!-- Processed Image Display -->
     {% if processed_image %}
     <h2>Processed Image:</h2>
     <img src="{{ processed_image }}" alt="Processed Image">
     <a href="{{ processed_image }}" download>Download Image</a>
     {% endif %}
+  </div>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
