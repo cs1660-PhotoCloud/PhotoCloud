@@ -13,7 +13,8 @@ storage_client = storage.Client()
 bucket = storage_client.bucket(BUCKET_NAME)
 
 UPLOAD_IMAGE_URL = "https://us-central1-photocloud-443915.cloudfunctions.net/upload_image"
-PROCESS_IMAGE_URL = "https://us-central1-photocloud-443915.cloudfunctions.net/process_image"
+
+# PROCESS_IMAGE_URL = "https://us-central1-photocloud-443915.cloudfunctions.net/process_image"
 
 @app.route('/')
 def index():
@@ -27,14 +28,18 @@ def upload_image():
         return jsonify({'error': 'No file part'}), 400
 
     file = request.files['file']
-    filter_option = request.form['filter']
+    filter_option = request.form['filter']  # filter is part of form data, not file
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
 
     try:
         print(filter_option)
-        files = {'file': (file.filename, file.stream, file.mimetype, filter_option)}
-        response = requests.post(UPLOAD_IMAGE_URL, files=files)
+        # Upload the file with the correct 'files' format
+        files = {'file': (file.filename, file.stream, file.mimetype)}
+        # Include the filter option in form data
+        data = {'filter': filter_option}
+        
+        response = requests.post(UPLOAD_IMAGE_URL, files=files, data=data)  # Send the filter option as form data
         return jsonify(response.json()), response.status_code
     except Exception as e:
         return jsonify({'error': str(e)}), 500

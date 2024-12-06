@@ -64,12 +64,7 @@
                             method: "POST",
                             body: formData,
                         });
-                        const result = await response.json();
-                        if (result.url) {
-                            uploadedImageURL = result.url;
-                        } else {
-                            alert(result.error || "Upload failed");
-                        }
+                        
                     } catch (error) {
                         console.error(error);
                     }
