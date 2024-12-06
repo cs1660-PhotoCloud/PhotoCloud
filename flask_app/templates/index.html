@@ -1,47 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Image Processing Service</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Processing Service</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <div class="container">
-    <h1>Upload and Process Your Image</h1>
+    <div class="container">
+        <h1>Image Processing Service</h1>
+        
+        <!-- Image Upload Section -->
+        <input type="file" id="imageUpload" accept="image/*">
+        <button id="uploadButton">Upload Image</button>
 
-    <!-- Flask Form for Server-Side Upload -->
-    <form action="/" method="post" enctype="multipart/form-data">
-      <input type="file" id="imageUpload" name="image" accept="image/*" required>
-      <select name="filter" id="filterSelect" required>
-        <option value="BLUR">Blur</option>
-        <option value="CONTOUR">Contour</option>
-        <option value="grayscale">Grayscale</option>
-        <option value="sepia">Sepia</option>
-        <option value="invert">Invert</option>
-      </select>
-      <button type="submit">Process</button>
-    </form>
+        <!-- Preview Section -->
+        <div id="preview-section" class="hidden">
+            <h2>Preview</h2>
+            <img id="imagePreview" alt="Uploaded Image Preview">
+            
+            <!-- Filter Selection -->
+            <div class="filters">
+                <label for="filterSelect">Apply Filter:</label>
+                <select id="filterSelect">
+                    <option value="none">None</option>
+                    <option value="grayscale(100%)">Grayscale</option>
+                    <option value="blur(5px)">Blur</option>
+                </select>
+            </div>
 
-    <!-- Error Message from Flask -->
-    {% if error %}
-    <p class="error">{{ error }}</p>
-    {% endif %}
-
-    <!-- Client-Side Preview -->
-    <div id="preview-section" class="hidden">
-      <h2>Preview</h2>
-      <img id="imagePreview" alt="Image Preview">
+            <!-- Download Button -->
+            <button id="downloadButton">Download Processed Image</button>
+        </div>
     </div>
 
-    <!-- Processed Image Display -->
-    {% if processed_image %}
-    <h2>Processed Image:</h2>
-    <img src="{{ processed_image }}" alt="Processed Image">
-    <a href="{{ processed_image }}" download>Download Image</a>
-    {% endif %}
-  </div>
-
-  <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="/static/script.js"></script>
 </body>
 </html>
