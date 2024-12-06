@@ -23,7 +23,7 @@ def upload_image(request):
             file.save(temp_file)
             temp_file.flush()  # Ensure data is written before upload
 
-            # Define the destination path in your GCP bucket
+            # Define the destination path in your GCP bucketbucket
             blob = bucket.blob(f"uploads/{file.filename}")
             blob.upload_from_filename(temp_file.name)
             
