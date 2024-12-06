@@ -1,53 +1,76 @@
 import os
+import json
+from flask import Flask, request, jsonify
 from google.cloud import storage
+from PIL import Image
+import io
 
-BUCKET_NAME = os.environ['BUCKET_NAME']
+app = Flask(__name__)
 
-def upload_image(request):
-    request_json = request.get_json()
-    if not request_json or 'image' not in request_json or 'filename' not in request_json:
-        return 'Invalid request', 400
-    
-    storage_client = storage.Client()
-    bucket = storage_client.get_bucket(BUCKET_NAME)
+# Initialize GCP storage client
+storage_client = storage.Client()
+bucket = storage_client.bucket("YOUR_BUCKET_NAME")
 
-    image_content = request_json['image']
-    filename = request_json['filename']
-    blob = bucket.blob(f"uploads/{filename}")
+@app.route('/')
+def home():
+    return 'Welcome to the Image Processing Service!'
 
-    blob.upload_from_string(image_content, content_type="image/jpeg")
-    blob.make_public()
+@app.route('/upload_image', methods=['POST'])
+def upload_image():
+    """Handle image upload and save it to GCP Cloud Storage."""
+    try:
+        # Check if the request contains the file
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file part'}), 400
+        file = request.files['file']
 
-    return {"url": blob.public_url}, 200
+        if file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400
 
-def process_image(request):
-    request_json = request.get_json()
-    if not request_json or 'filename' not in request_json or 'filter' not in request_json:
-        return 'Invalid request', 400
-    
-    storage_client = storage.Client()
-    bucket = storage_client.get_bucket(BUCKET_NAME)
+        # Save the uploaded image to Google Cloud Storage
+        blob = bucket.blob(f"uploads/{file.filename}")
+        blob.upload_from_file(file)
+        
+        # Get public URL of the uploaded image
+        blob.make_public()
+        return jsonify({'message': 'Image uploaded successfully', 'url': blob.public_url}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-    filename = request_json['filename']
-    filter_type = request_json['filter']
-    blob = bucket.blob(f"uploads/{filename}")
+@app.route('/process_image', methods=['POST'])
+def process_image():
+    """Process an image (e.g., apply color filter) and return the processed image."""
+    try:
+        data = request.get_json()
+        image_url = data.get("image_url")
+        filter_type = data.get("filter_type")
 
-    image_content = blob.download_as_bytes()
-    image = Image.open(io.BytesIO(image_content))
+        if not image_url or not filter_type:
+            return jsonify({'error': 'Missing parameters'}), 400
 
-    # Apply filter
-    if filter_type == "BLUR":
-        image = image.filter(ImageFilter.BLUR)
-    elif filter_type == "CONTOUR":
-        image = image.filter(ImageFilter.CONTOUR)
+        # Download image from Cloud Storage
+        blob = bucket.blob(image_url)
+        image_data = blob.download_as_bytes()
+        
+        image = Image.open(io.BytesIO(image_data))
+        
+        # Apply a simple filter (e.g., grayscale)
+        if filter_type == "grayscale":
+            image = image.convert("L")
+        # More filters can be added here
 
-    # Save processed image back to storage
-    output = io.BytesIO()
-    image.save(output, format="JPEG")
-    output.seek(0)
+        # Save processed image back to Cloud Storage
+        processed_blob = bucket.blob(f"processed/{blob.name}")
+        with io.BytesIO() as output:
+            image.save(output, format="PNG")
+            output.seek(0)
+            processed_blob.upload_from_file(output, content_type="image/png")
+        
+        # Make processed image public and return URL
+        processed_blob.make_public()
+        return jsonify({'message': 'Image processed successfully', 'url': processed_blob.public_url}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-    processed_blob = bucket.blob(f"processed/{filename}")
-    processed_blob.upload_from_file(output, content_type="image/jpeg")
-    processed_blob.make_public()
-
-    return {"url": processed_blob.public_url}, 200
+if __name__ == '__main__':
+    app.run(debug=True)
