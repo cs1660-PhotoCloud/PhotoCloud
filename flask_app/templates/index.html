@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Processing Service</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Image Processing Service</h1>
+        
+        <!-- Image Upload Section -->
+        <input type="file" id="imageUpload" accept="image/*">
+        <button id="uploadButton">Upload Image</button>
+
+        <!-- Preview Section -->
+        <div id="preview-section" class="hidden">
+            <h2>Preview</h2>
+            <img id="imagePreview" alt="Uploaded Image Preview">
+            
+            <!-- Filter Selection -->
+            <div class="filters">
+                <label for="filterSelect">Apply Filter:</label>
+                <select id="filterSelect">
+                    <option value="none">None</option>
+                    <option value="grayscale(100%)">Grayscale</option>
+                    <option value="blur(5px)">Blur</option>
+                </select>
+            </div>
+
+            <!-- Download Button -->
+            <button id="downloadButton">Download Processed Image</button>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

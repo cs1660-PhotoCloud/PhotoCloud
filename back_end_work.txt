@@ -1,0 +1,30 @@
+TASKS REQUIRED:
+
+1. Cloud Storage - create a storage bucket for images to be stored.
+
+2. Cloud Functions - create functions for image manipulation.
+
+	- Functions will need to be triggered by image being uploaded - create trigger.
+
+		- Image file will be in name format TRANSFORM_USER.png to specify change and who image belongs to.
+
+	- After image transformation, send image back in cloud storage.
+
+3. App Engine - create a functioning web application ofr image manipulation and download.
+
+	- Back-end API for communication with cloud storage.
+
+		- List files that belong to user.
+
+		- Upload of file to cloud storage.
+
+		- Download of file from cloud storage.
+
+	- Set up .yaml file so app engine can run application.
+
+4. Cloud build - allow for automatic deployment.
+
+	- Set up .yaml file to automate deployment.
+
+	- Create trigger that runs when change is detected on github.
+
