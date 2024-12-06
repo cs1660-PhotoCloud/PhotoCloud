@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Processing Service</title>
+</head>
+<body>
+    <h1>Upload and Process Your Image</h1>
+    <form action="/" method="post" enctype="multipart/form-data">
+        <input type="file" name="image" required>
+        <select name="filter" required>
+            <option value="BLUR">Blur</option>
+            <option value="CONTOUR">Contour</option>
+        </select>
+        <button type="submit">Process</button>
+    </form>
+    {% if processed_image %}
+    <h2>Processed Image:</h2>
+    <img src="{{ processed_image }}" alt="Processed Image">
+    <a href="{{ processed_image }}" download>Download Image</a>
+    {% endif %}
+</body>
+</html>
