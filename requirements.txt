@@ -1,4 +1,8 @@
-flask
 flask-cors
-google-cloud-storage
-pillow
+requests
+gunicorn
+flask==2.2.5
+functions-framework==3.3.0
+werkzeug==2.2.3
+google-cloud-storage==2.10.0
+Pillow==9.4.0
