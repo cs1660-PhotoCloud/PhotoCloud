@@ -27,16 +27,13 @@ def upload_image():
         return jsonify({'error': 'No file part'}), 400
 
     file = request.files['file']
-    print(request.files)
-    #print("grabbed file")
-    print(request.form)
-    data = request.form['filter']
+    filter_option = request.form['filter']
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
 
     try:
-        print(data)
-        files = {'file': (file.filename, file.stream, file.mimetype)}
+        print(filter_option)
+        files = {'file': (file.filename, file.stream, file.mimetype, filter_option)}
         response = requests.post(UPLOAD_IMAGE_URL, files=files)
         return jsonify(response.json()), response.status_code
     except Exception as e:

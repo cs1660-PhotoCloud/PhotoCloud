@@ -15,20 +15,38 @@ def upload_image(request):
         return jsonify({'error': 'No file part'}), 400
 
     file = request.files['file']
+    filter_type = request.form.get('filter', 'NONE')
+
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
     try:
-        # Generate a temporary file and store it in Cloud Storage
-        with tempfile.NamedTemporaryFile(delete=True) as temp_file:
-            file.save(temp_file)
-            temp_file.flush()  # Ensure data is written before upload
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
+            file.save(temp_file.name)
 
-            # Define the destination path in your GCP bucketbucket
-            blob = bucket.blob(f"uploads/{file.filename}")
-            blob.upload_from_filename(temp_file.name)
-            
-            # Make the file publicly accessible
-            blob.make_public()
+        # Open the image using Pillow
+        with Image.open(temp_file.name) as image:
+            # Apply the requested filter
+            if filter_type == 'BLUR':
+                image = image.filter(ImageFilter.BLUR)
+            elif filter_type == 'CONTOUR':
+                image = image.filter(ImageFilter.CONTOUR)
+            # Add more filters as needed
+
+            # Save the modified image to a new temporary file
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as filtered_temp_file:
+                image.save(filtered_temp_file.name)
+                filtered_temp_filename = filtered_temp_file.name
+
+        # Upload the filtered image to Cloud Storage
+        blob = bucket.blob(f"uploads/{file.filename}")
+        blob.upload_from_filename(filtered_temp_filename)
+
+        # Make the file publicly accessible
+        blob.make_public()
+
+        # Clean up temporary files
+        os.remove(temp_file.name)
+        os.remove(filtered_temp_filename)
 
         # Return the public URL of the uploaded file
         return jsonify({'image_url': blob.public_url}), 200
