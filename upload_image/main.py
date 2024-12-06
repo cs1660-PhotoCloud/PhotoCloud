@@ -17,22 +17,33 @@ def upload_image(request):
     file = request.files['file']
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
-    try:
-        # Generate a temporary file and store it in Cloud Storage
-        with tempfile.NamedTemporaryFile(delete=True) as temp_file:
-            file.save(temp_file)
-            temp_file.flush()  # Ensure data is written before upload
 
-            # Define the destination path in your GCP bucketbucket
+    try:
+        # Create a temporary file with explicit cleanup (delete=False)
+        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            file.save(temp_file)
+            temp_file_path = temp_file.name  # Get the path of the temporary file
+
+            # Log the temporary file path for debugging
+            print(f"Temporary file created at: {temp_file_path}")
+
+            # Define the destination path in your GCP bucket
             blob = bucket.blob(f"uploads/{file.filename}")
-            blob.upload_from_filename(temp_file.name)
+            print(f"Uploading file to: {blob.name}")
+            blob.upload_from_filename(temp_file_path)
             
-            # Make the file publicly accessible
+            # Make the file publicly accessible (optional)
             blob.make_public()
+            print(f"File uploaded successfully. Public URL: {blob.public_url}")
+
+            # Clean up the temporary file manually
+            os.remove(temp_file_path)
+            print(f"Temporary file removed: {temp_file_path}")
 
         # Return the public URL of the uploaded file
         return jsonify({'image_url': blob.public_url}), 200
 
     except Exception as e:
-        # Log error to Cloud Logging (optional) before returning a generic error message
-        return jsonify({'error': 'An error occurred while uploading the image'}), 500
+        # Log the detailed error for debugging
+        print(f"Error while uploading: {str(e)}")  # For local testing, logs will be printed
+        return jsonify({'error': f'An error occurred while uploading the image: {str(e)}'}), 500
