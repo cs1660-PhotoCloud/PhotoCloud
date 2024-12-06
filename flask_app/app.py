@@ -4,7 +4,6 @@ from google.cloud import storage
 from PIL import Image, ImageFilter
 import os
 import io
-import requests
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 CORS(app)  # Enable Cross-Origin Resource Sharing
@@ -48,32 +47,18 @@ def upload_image():
 def process_image():
     """Handle image processing by calling the Cloud Function."""
     data = request.get_json()
-    if not data or 'image_url' not in data or 'filter_type' not in data:
+    if not data or 'filename' not in data or 'filter' not in data:
         return jsonify({'error': 'Invalid request'}), 400
 
-    image_url = data['image_url']
-    filter_type = data['filter_type']
-
     try:
-        # Determine if the URL is gs:// or HTTP
-        if image_url.startswith("gs://"):
-            # Convert gs:// to bucket and object name
-            bucket_name, object_name = image_url[5:].split("/", 1)
-
-            # Use the public URL format for HTTP-based processing
-            image_url = f"https://storage.googleapis.com/{bucket_name}/{object_name}"
-
         # Send the request to the Cloud Function
-        response = requests.post(PROCESS_IMAGE_URL, json={
-            "image_url": image_url,
-            "filter_type": filter_type
-        })
+        response = requests.post(PROCESS_IMAGE_URL, json=data)
 
         # Return the response from the Cloud Function
         return jsonify(response.json()), response.status_code
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
+    
 
 @app.route('/processed-images', methods=['GET'])
 def list_processed_images():

@@ -1,66 +1,94 @@
-import os
-import json
+from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for
+from flask_cors import CORS
 from google.cloud import storage
-from PIL import Image
+from PIL import Image, ImageFilter
+import os
 import io
-from flask import Request, jsonify
+import requests
 
-# Initialize GCP storage client
+app = Flask(__name__, template_folder="templates", static_folder="static")
+CORS(app)  # Enable Cross-Origin Resource Sharing
+
+# Configure Google Cloud Storage
+BUCKET_NAME = "photocloud-img-process-bucket"  # Replace with your GCP bucket name
 storage_client = storage.Client()
-bucket = storage_client.bucket("YOUR_BUCKET_NAME")
+bucket = storage_client.bucket(BUCKET_NAME)
 
-def upload_image(request: Request):
-    """Handle image upload and save it to GCP Cloud Storage."""
+UPLOAD_IMAGE_URL = "https://upload-image-offkfeiooa-uc.a.run.app/"
+PROCESS_IMAGE_URL = "https://process-image-offkfeiooa-uc.a.run.app/"
+
+@app.route('/')
+def index():
+    """Render the main page."""
+    return render_template("index.html")  # Assumes an index.html file in the templates folder
+
+
+@app.route('/upload', methods=['POST'])
+def upload_image():
+    """Handle image upload by calling the Cloud Function."""
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+
     try:
-        # Check if the request contains the file
-        if 'file' not in request.files:
-            return jsonify({'error': 'No file part'}), 400
-        file = request.files['file']
+        # Send the file to the Cloud Function
+        files = {'file': (file.filename, file.stream, file.mimetype)}
+        response = requests.post(UPLOAD_IMAGE_URL, files=files)
 
-        if file.filename == '':
-            return jsonify({'error': 'No selected file'}), 400
-
-        # Save the uploaded image to Google Cloud Storage
-        blob = bucket.blob(f"uploads/{file.filename}")
-        blob.upload_from_file(file)
-
-        # Get public URL of the uploaded image
-        blob.make_public()
-        return jsonify({'message': 'Image uploaded successfully', 'url': blob.public_url}), 200
+        # Return the response from the Cloud Function
+        return jsonify(response.json()), response.status_code
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-def process_image(request: Request):
-    """Process an image (e.g., apply color filter) and return the processed image."""
+
+@app.route('/process', methods=['POST'])
+def process_image():
+    """Handle image processing by calling the Cloud Function."""
+    data = request.get_json()
+    if not data or 'image_url' not in data or 'filter_type' not in data:
+        return jsonify({'error': 'Invalid request'}), 400
+
+    image_url = data['image_url']
+    filter_type = data['filter_type']
+
     try:
-        data = request.get_json()
-        image_url = data.get("image_url")
-        filter_type = data.get("filter_type")
+        # Determine if the URL is gs:// or HTTP
+        if image_url.startswith("gs://"):
+            # Convert gs:// to bucket and object name
+            bucket_name, object_name = image_url[5:].split("/", 1)
 
-        if not image_url or not filter_type:
-            return jsonify({'error': 'Missing parameters'}), 400
+            # Use the public URL format for HTTP-based processing
+            image_url = f"https://storage.googleapis.com/{bucket_name}/{object_name}"
 
-        # Download image from Cloud Storage
-        blob = bucket.blob(image_url)
-        image_data = blob.download_as_bytes()
-        
-        image = Image.open(io.BytesIO(image_data))
-        
-        # Apply a simple filter (e.g., grayscale)
-        if filter_type == "grayscale":
-            image = image.convert("L")
-        # More filters can be added here
+        # Send the request to the Cloud Function
+        response = requests.post(PROCESS_IMAGE_URL, json={
+            "image_url": image_url,
+            "filter_type": filter_type
+        })
 
-        # Save processed image back to Cloud Storage
-        processed_blob = bucket.blob(f"processed/{blob.name}")
-        with io.BytesIO() as output:
-            image.save(output, format="PNG")
-            output.seek(0)
-            processed_blob.upload_from_file(output, content_type="image/png")
-        
-        # Make processed image public and return URL
-        processed_blob.make_public()
-        return jsonify({'message': 'Image processed successfully', 'url': processed_blob.public_url}), 200
+        # Return the response from the Cloud Function
+        return jsonify(response.json()), response.status_code
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+@app.route('/processed-images', methods=['GET'])
+def list_processed_images():
+    """List all processed images and render them in the frontend."""
+    try:
+        blobs = bucket.list_blobs(prefix="processed/")  # List blobs with 'processed/' prefix
+        processed_images = [blob.public_url for blob in blobs if blob.name.endswith(('jpg', 'jpeg', 'png'))]
+
+        # Render the list in an HTML page
+        return render_template("processed_images.html", images=processed_images)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+
+if __name__ == '__main__':
+    # Make sure to set the GOOGLE_APPLICATION_CREDENTIALS environment variable
+    # Example: export GOOGLE_APPLICATION_CREDENTIALS="path/to/your/credentials.json"
+    app.run(host='0.0.0.0', port=8080, debug=True)
