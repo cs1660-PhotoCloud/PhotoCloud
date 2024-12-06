@@ -26,28 +26,28 @@ def upload_image(request):
         # Open the image using Pillow
         with Image.open(temp_file.name) as image:
             # Apply the requested filter
-            if filter_type == 'BLUR':
+            if filter_type == 'grayscale(100%)':
                 image = image.filter(ImageFilter.BLUR)
             elif filter_type == 'CONTOUR':
                 image = image.filter(ImageFilter.CONTOUR)
             # Add more filters as needed
-
+            print("1")
             # Save the modified image to a new temporary file
             with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as filtered_temp_file:
                 image.save(filtered_temp_file.name)
                 filtered_temp_filename = filtered_temp_file.name
-
+        print("2")
         # Upload the filtered image to Cloud Storage
         blob = bucket.blob(f"uploads/{file.filename}")
         blob.upload_from_filename(filtered_temp_filename)
-
+        print("3")
         # Make the file publicly accessible
         blob.make_public()
-
+        print("4")
         # Clean up temporary files
         os.remove(temp_file.name)
         os.remove(filtered_temp_filename)
-
+        print("5")
         # Return the public URL of the uploaded file
         return jsonify({'image_url': blob.public_url}), 200
 
