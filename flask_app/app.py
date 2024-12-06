@@ -70,3 +70,6 @@ def list_processed_images():
 def main(request):
     """Google Cloud Function entry point."""
     return app(request)
+
+if __name__ == "__main__":
+    app.run(debug=True)
