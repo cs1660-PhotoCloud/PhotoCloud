@@ -1,22 +1,15 @@
 import os
 import json
-from flask import Flask, request, jsonify
 from google.cloud import storage
 from PIL import Image
 import io
-
-app = Flask(__name__)
+from flask import Request, jsonify
 
 # Initialize GCP storage client
 storage_client = storage.Client()
 bucket = storage_client.bucket("YOUR_BUCKET_NAME")
 
-@app.route('/')
-def home():
-    return 'Welcome to the Image Processing Service!'
-
-@app.route('/upload_image', methods=['POST'])
-def upload_image():
+def upload_image(request: Request):
     """Handle image upload and save it to GCP Cloud Storage."""
     try:
         # Check if the request contains the file
@@ -30,15 +23,14 @@ def upload_image():
         # Save the uploaded image to Google Cloud Storage
         blob = bucket.blob(f"uploads/{file.filename}")
         blob.upload_from_file(file)
-        
+
         # Get public URL of the uploaded image
         blob.make_public()
         return jsonify({'message': 'Image uploaded successfully', 'url': blob.public_url}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/process_image', methods=['POST'])
-def process_image():
+def process_image(request: Request):
     """Process an image (e.g., apply color filter) and return the processed image."""
     try:
         data = request.get_json()
@@ -72,5 +64,3 @@ def process_image():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-if __name__ == '__main__':
-    app.run(debug=True)
