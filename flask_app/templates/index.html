@@ -20,9 +20,9 @@
         <img id="imagePreview" alt="Image Preview" />
         <select id="filterSelect">
             <option value="none">No Filter</option>
-            <option value="grayscale(100%)">Grayscale</option>
-            <option value="sepia(100%)">Sepia</option>
-            <option value="blur(5px)">Blur</option>
+            <option value="grayscale">Grayscale</option>
+            <option value="sepia">Sepia</option>
+            <option value="blur">Blur</option>
         </select>
         <button id="downloadButton">Download Processed Image</button>
     </div>
@@ -43,9 +43,9 @@
             let uploadedImageURL = "";
 
             uploadButton.addEventListener("click", async (e) => {
-                e.preventDefault();
+                e.preventDefault(); // Prevent form default submit
                 const file = imageUpload.files[0];
-                const filter_type = document.getElementById("filterSelect").value;
+                const filter_type = filterSelect.value; // Get the filter type
                 if (file && file.type.startsWith("image/")) {
                     const reader = new FileReader();
                     reader.onload = (e) => {
@@ -58,13 +58,22 @@
                     // Upload the file to the Flask app
                     const formData = new FormData();
                     formData.append("file", file);
-                    formData.append("filter", filter_type);
+                    formData.append("filter", filter_type); // Include the filter option
+
                     try {
                         const response = await fetch("/upload", {
                             method: "POST",
                             body: formData,
                         });
-                        
+
+                        const result = await response.json();
+                        const resultDiv = document.getElementById('result');
+
+                        if (result.image_url) {
+                            resultDiv.innerHTML = `<p>File uploaded successfully! <a href="${result.image_url}" target="_blank">View Image</a></p>`;
+                        } else {
+                            resultDiv.innerHTML = `<p>Error: ${result.error}</p>`;
+                        }
                     } catch (error) {
                         console.error(error);
                     }
@@ -89,55 +98,6 @@
                 }
             });
         });
-
-        //???
-        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const fileInput = document.getElementById('fileInput');
-            const filter_type = document.getElementById('filterSelect').value;
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            formData.append('filter', filter_type)
-
-            try {
-                const response = await fetch('/upload', {
-                    method: 'POST',
-                    body: formData,
-                });
-                const result = await response.json();
-                const resultDiv = document.getElementById('result');
-
-                if (result.url) {
-                    resultDiv.innerHTML = `<p>File uploaded! <a href="${result.url}" target="_blank">View Image</a></p>`;
-                } else {
-                    resultDiv.innerHTML = `<p>Error: ${result.error}</p>`;
-                }
-            } catch (error) {
-                console.error(error);
-            }
-        });
-
-        /*async function processImage(imageUrl, filterType) {
-            try {
-                const response = await fetch("/process", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ image_url: imageUrl, filter_type: filterType }),
-                });
-                const result = await response.json();
-        
-                if (result.url) {
-                    return result.url; // Return the processed image URL
-                } else {
-                    alert(result.error || "Processing failed");
-                    return null;
-                }
-            } catch (error) {
-                console.error(error);
-                alert("Error processing image.");
-                return null;
-            }
-        }*/
     </script>
 </body>
 </html>
