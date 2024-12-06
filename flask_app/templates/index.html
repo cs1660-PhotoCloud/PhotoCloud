@@ -45,6 +45,7 @@
             uploadButton.addEventListener("click", async (e) => {
                 e.preventDefault();
                 const file = imageUpload.files[0];
+                const filter_type = document.getElementById("filterSelect").value;
                 if (file && file.type.startsWith("image/")) {
                     const reader = new FileReader();
                     reader.onload = (e) => {
@@ -57,6 +58,7 @@
                     // Upload the file to the Flask app
                     const formData = new FormData();
                     formData.append("file", file);
+                    formData.append("filter", filter_type);
                     try {
                         const response = await fetch("/upload", {
                             method: "POST",
@@ -93,11 +95,14 @@
             });
         });
 
+        //???
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const fileInput = document.getElementById('fileInput');
+            const filter_type = document.getElementById('filterSelect').value;
             const formData = new FormData();
             formData.append('file', fileInput.files[0]);
+            formData.append('filter', filter_type)
 
             try {
                 const response = await fetch('/upload', {
@@ -117,7 +122,7 @@
             }
         });
 
-        async function processImage(imageUrl, filterType) {
+        /*async function processImage(imageUrl, filterType) {
             try {
                 const response = await fetch("/process", {
                     method: "POST",
@@ -137,7 +142,7 @@
                 alert("Error processing image.");
                 return null;
             }
-        }
+        }*/
     </script>
 </body>
 </html>

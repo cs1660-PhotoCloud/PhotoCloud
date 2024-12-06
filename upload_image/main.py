@@ -17,7 +17,6 @@ def upload_image(request):
     file = request.files['file']
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
-
     try:
         # Generate a temporary file and store it in Cloud Storage
         with tempfile.NamedTemporaryFile(delete=True) as temp_file:
