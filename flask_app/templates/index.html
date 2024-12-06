@@ -3,40 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Processing Service</title>
-    <link rel="stylesheet" href="../static/style.css">
+    <title>Image Upload and Processing</title>
 </head>
 <body>
-    <div class="container">
-        <h1>Image Processing Service</h1>
-        
-        <!-- Image Upload Section -->
-        <input type="file" id="imageUpload" accept="image/*">
-        <button id="uploadButton">Upload Image</button>
+    <h1>Upload and Process Image</h1>
 
-        <!-- Preview Section -->
-        <div id="preview-section" class="hidden">
-            <h2>Preview</h2>
-            <img id="imagePreview" alt="Uploaded Image Preview">
-            
-            <!-- Filter Selection -->
-            <div class="filters">
-                <label for="filterSelect">Apply Filter:</label>
-                <select id="filterSelect">
-                    <option value="none">None</option>
-                    <option value="grayscale(100%)">Grayscale</option>
-                    <option value="blur(5px)">Blur</option>
-                </select>
-            </div>
+    <!-- Image Upload Form -->
+    <form id="uploadForm">
+        <input type="file" id="fileInput" name="file" accept="image/*" required>
+        <button type="submit" id="uploadButton">Upload Image</button>
+    </form>
 
-            <!-- Download Button -->
-            <button id="downloadButton">Download Processed Image</button>
-            <!-- Upload to Cloud Button -->
-            <button id="cloudUploadButton">Upload Processed Image To Cloud</button>
-        </div>
-        <button id="toAllImagesButton" href="processed_images.html" style="margin: 20px;">View All Cloud Images</button>
+    <!-- Image Preview -->
+    <div id="preview-section" class="hidden">
+        <h2>Image Preview</h2>
+        <img id="imagePreview" alt="Image Preview" />
+        <select id="filterSelect">
+            <option value="none">No Filter</option>
+            <option value="grayscale(100%)">Grayscale</option>
+            <option value="sepia(100%)">Sepia</option>
+            <option value="blur(5px)">Blur</option>
+        </select>
+        <button id="downloadButton">Download Processed Image</button>
     </div>
 
-    <script src="/static/script.js"></script>
+    <div id="result"></div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const imageUpload = document.getElementById("fileInput");
+            const uploadButton = document.getElementById("uploadButton");
+            const previewSection = document.getElementById("preview-section");
+            const imagePreview = document.getElementById("imagePreview");
+            const filterSelect = document.getElementById("filterSelect");
+            const downloadButton = document.getElementById("downloadButton");
+
+            let uploadedImage = null;
+            let uploadedImageURL = "";
+
+            uploadButton.addEventListener("click", async (e) => {
+                e.preventDefault();
+                const file = imageUpload.files[0];
+                if (file && file.type.startsWith("image/")) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        uploadedImage = e.target.result;
+                        imagePreview.src = uploadedImage;
+                        previewSection.classList.remove("hidden");
+                    };
+                    reader.readAsDataURL(file);
+
+                    // Upload the file to the Flask app
+                    const formData = new FormData();
+                    formData.append("file", file);
+                    try {
+                        const response = await fetch("/upload", {
+                            method: "POST",
+                            body: formData,
+                        });
+                        const result = await response.json();
+                        if (result.url) {
+                            uploadedImageURL = result.url;
+                        } else {
+                            alert(result.error || "Upload failed");
+                        }
+                    } catch (error) {
+                        console.error(error);
+                    }
+                } else {
+                    alert("Please upload a valid image file.");
+                }
+            });
+
+            filterSelect.addEventListener("change", () => {
+                const filter = filterSelect.value;
+                imagePreview.style.filter = filter === "none" ? "" : filter;
+            });
+
+            downloadButton.addEventListener("click", () => {
+                if (uploadedImage) {
+                    const link = document.createElement("a");
+                    link.download = "processed-image.png";
+                    link.href = imagePreview.src;
+                    link.click();
+                } else {
+                    alert("No image to download.");
+                }
+            });
+        });
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('fileInput');
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+                const result = await response.json();
+                const resultDiv = document.getElementById('result');
+
+                if (result.url) {
+                    resultDiv.innerHTML = `<p>File uploaded! <a href="${result.url}" target="_blank">View Image</a></p>`;
+                } else {
+                    resultDiv.innerHTML = `<p>Error: ${result.error}</p>`;
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        });
+
+        async function processImage(filename, filter) {
+            try {
+                const response = await fetch('/process', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename, filter }),
+                });
+                const result = await response.json();
+                if (result.url) {
+                    console.log(`Processed image URL: ${result.url}`);
+                } else {
+                    console.error(result.error);
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+    </script>
 </body>
 </html>

@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
     formData.append('file', fileInput.files[0]);
   
     try {
-      const response = await fetch('/upload', {
+      const response = await fetch('http://localhost:5000/upload', {
         method: 'POST',
         body: formData,
       });
@@ -68,7 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Example for processing the image
   async function processImage(filename, filter) {
     try {
-      const response = await fetch('/process', {
+      const response = await fetch('http://localhost:5000/process', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filename, filter }),
