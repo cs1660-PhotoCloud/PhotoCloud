@@ -2,6 +2,7 @@ import os
 from google.cloud import storage
 from flask import jsonify
 import tempfile
+from PIL import Image, ImageFilter
 
 # Initialize Google Cloud Storage Client
 storage_client = storage.Client()

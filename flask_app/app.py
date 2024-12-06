@@ -12,8 +12,8 @@ BUCKET_NAME = "photocloud-img-process-bucket"  # Replace with your GCP bucket na
 storage_client = storage.Client()
 bucket = storage_client.bucket(BUCKET_NAME)
 
-UPLOAD_IMAGE_URL = "https://upload-image-offkfeiooa-uc.a.run.app/"
-PROCESS_IMAGE_URL = "https://process-image-offkfeiooa-uc.a.run.app/"
+UPLOAD_IMAGE_URL = "https://us-central1-photocloud-443915.cloudfunctions.net/upload_image"
+PROCESS_IMAGE_URL = "https://us-central1-photocloud-443915.cloudfunctions.net/process_image"
 
 @app.route('/')
 def index():

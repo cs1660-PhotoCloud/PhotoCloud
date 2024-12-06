@@ -117,21 +117,25 @@
             }
         });
 
-        async function processImage(filename, filter) {
+        async function processImage(imageUrl, filterType) {
             try {
-                const response = await fetch('/process', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ filename, filter }),
+                const response = await fetch("/process", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ image_url: imageUrl, filter_type: filterType }),
                 });
                 const result = await response.json();
+        
                 if (result.url) {
-                    console.log(`Processed image URL: ${result.url}`);
+                    return result.url; // Return the processed image URL
                 } else {
-                    console.error(result.error);
+                    alert(result.error || "Processing failed");
+                    return null;
                 }
             } catch (error) {
                 console.error(error);
+                alert("Error processing image.");
+                return null;
             }
         }
     </script>
