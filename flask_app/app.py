@@ -8,7 +8,7 @@ app = Flask(__name__, template_folder="templates", static_folder="static")
 CORS(app)  # Enable Cross-Origin Resource Sharing
 
 # Configure Google Cloud Storage
-BUCKET_NAME = "photocloud-img-process-bucket"  # Replace with your GCP bucket name
+BUCKET_NAME = "photocloud-img-process-bucket"
 storage_client = storage.Client()
 bucket = storage_client.bucket(BUCKET_NAME)
 
@@ -76,10 +76,10 @@ def list_processed_images():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Define the entry point for Google Cloud Functions
 def main(request):
     """Google Cloud Function entry point."""
     return app(request)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host="0.0.0.0", port=port)

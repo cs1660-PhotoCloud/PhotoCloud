@@ -3,14 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Upload and Processing</title>
+    <link rel="stylesheet" href="../static/style.css">
+    <title>PhotoCloud</title>
 </head>
 <body>
-    <h1>Upload and Process Image</h1>
+    <h1>PhotoCloud</h1>
 
     <!-- Image Upload Form -->
     <form id="uploadForm">
         <input type="file" id="fileInput" name="file" accept="image/*" required>
+        <select id="filterSelect">
+            <option value="none">No Filter</option>
+            <option value="grayscale">Grayscale</option>
+            <option value="sepia">Sepia</option>
+            <option value="blur">Blur</option>
+        </select>
         <button type="submit" id="uploadButton">Upload Image</button>
     </form>
 
@@ -18,14 +25,8 @@
     <div id="preview-section" class="hidden">
         <h2>Image Preview</h2>
         <img id="imagePreview" alt="Image Preview" />
-        <select id="filterSelect">
-            <option value="none">No Filter</option>
-            <option value="grayscale">Grayscale</option>
-            <option value="sepia">Sepia</option>
-            <option value="blur">Blur</option>
-        </select>
-        <button id="downloadButton">Download Processed Image</button>
     </div>
+    <button id="downloadButton">Download Processed Image</button>
 
     <div id="result"></div>
 
@@ -39,8 +40,25 @@
             const filterSelect = document.getElementById("filterSelect");
             const downloadButton = document.getElementById("downloadButton");
 
+            downloadButton.style.display = "none";
+
             let uploadedImage = null;
             let uploadedImageURL = "";
+
+            imageUpload.addEventListener("change", () => {
+            const file = imageUpload.files[0];
+            if (file && file.type.startsWith("image/")) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const uploadedImage = e.target.result;
+                    imagePreview.src = uploadedImage;
+                    previewSection.classList.remove("hidden");
+                };
+                reader.readAsDataURL(file);
+            } else {
+                alert("Please upload a valid image file.");
+            }
+            });
 
             uploadButton.addEventListener("click", async (e) => {
                 e.preventDefault(); // Prevent form default submit
@@ -51,7 +69,6 @@
                     reader.onload = (e) => {
                         uploadedImage = e.target.result;
                         imagePreview.src = uploadedImage;
-                        previewSection.classList.remove("hidden");
                     };
                     reader.readAsDataURL(file);
 
@@ -70,6 +87,8 @@
                         const resultDiv = document.getElementById('result');
 
                         if (result.image_url) {
+                            imagePreview.src = result.image_url;
+                            downloadButton.style.display = "inline-block";
                             resultDiv.innerHTML = `<p>File uploaded successfully! <a href="${result.image_url}" target="_blank">View Image</a></p>`;
                         } else {
                             resultDiv.innerHTML = `<p>Error: ${result.error}</p>`;
@@ -90,8 +109,8 @@
             downloadButton.addEventListener("click", () => {
                 if (uploadedImage) {
                     const link = document.createElement("a");
-                    link.download = "processed-image.png";
                     link.href = imagePreview.src;
+                    link.download = "processed-image.png";
                     link.click();
                 } else {
                     alert("No image to download.");
