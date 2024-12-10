@@ -22,14 +22,15 @@ jobs:
       run: |
         gcloud config set project photocloud-443915
         gcloud config set compute/region us-central1
+        gcloud auth configure-docker gcr.io --quiet
 
     - name: Build and push Docker image
       run: |
         IMAGE_NAME="gcr.io/photocloud-443915/test-image"
         docker build \
           --build-arg GOOGLE_APPLICATION_CREDENTIALS_CONTENT="${{ secrets.GCLOUD_SERVICE_KEY }}" \
-          -t test-image .
-        docker push test-image
+          -t $IMAGE_NAME .
+        docker push $IMAGE_NAME
 
     - name: Deploy to Cloud Run
       run: |
