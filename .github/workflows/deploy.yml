@@ -34,7 +34,14 @@ jobs:
       env:
         GOOGLE_APPLICATION_CREDENTIALS_CONTENT: ${{secrets.GCLOUD_SERVICE_KEY}}
 
-    - name: Deploy to Cloud Run
+    - name: Deploy Image Processing to Cloud Functions
+      run: |
+        gcloud functions deploy upload_image \
+          --runtime python310 \
+          --trigger-http \
+          --allow-unauthenticated
+
+    - name: Deploy Application to Cloud Run
       run: |
         gcloud run deploy photocloudapp \
           --image gcr.io/photocloud-443915/test-image:latest \
