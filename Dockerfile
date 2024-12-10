@@ -1,8 +1,9 @@
 FROM --platform=$TARGETPLATFORM python:3.9-slim
 WORKDIR /usr/src/app
+ARG GOOGLE_APPLICATION_CREDENTIALS_CONTENT
+RUN echo "$GOOGLE_APPLICATION_CREDENTIALS_CONTENT" > /usr/src/app/credentials.json
+ENV GOOGLE_APPLICATION_CREDENTIALS="/usr/src/app/credentials.json"
 COPY requirements.txt ./
-COPY credentials.json ./
-ENV GOOGLE_APPLICATION_CREDENTIALS="credentials.json"
 RUN pip3 install --no-cache-dir -r requirements.txt
 COPY flask_app ./
 EXPOSE 8080
