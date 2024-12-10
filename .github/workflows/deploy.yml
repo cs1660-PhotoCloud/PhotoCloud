@@ -39,12 +39,14 @@ jobs:
         gcloud functions deploy upload_image \
           --runtime python310 \
           --trigger-http \
-          --allow-unauthenticated
+          --allow-unauthenticated \
+          --source upload_image
 
     - name: Deploy Application to Cloud Run
       run: |
         gcloud run deploy photocloudapp \
           --image gcr.io/photocloud-443915/test-image:latest \
+          --set-env-vars GOOGLE_APPLICATION_CREDENTIALS=/usr/src/app/credentials.json \
           --platform managed \
           --region us-central1 \
           --allow-unauthenticated \
