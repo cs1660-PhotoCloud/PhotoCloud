@@ -30,6 +30,7 @@ jobs:
         context: ./
         file: ./Dockerfile
         push: true
+        tags: gcr.io/photocloud-443915/test-image:latest
       env:
         GOOGLE_APPLICATION_CREDENTIALS_CONTENT: ${{secrets.GCLOUD_SERVICE_KEY}}
 
