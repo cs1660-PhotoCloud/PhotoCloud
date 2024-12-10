@@ -25,12 +25,13 @@ jobs:
         gcloud auth configure-docker gcr.io --quiet
 
     - name: Build and push Docker image
-      run: |
-        IMAGE_NAME="gcr.io/photocloud-443915/test-image"
-        docker build \
-          --build-arg GOOGLE_APPLICATION_CREDENTIALS_CONTENT="${{ secrets.GCLOUD_SERVICE_KEY }}" \
-          -t $IMAGE_NAME .
-        docker push $IMAGE_NAME
+      uses: docker/build-push-action@v6
+      with:
+        context: ./
+        file: ./Dockerfile
+        push: true
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS_CONTENT: ${{secrets.GCLOUD_SERVICE_KEY}}
 
     - name: Deploy to Cloud Run
       run: |
