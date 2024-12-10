@@ -37,7 +37,8 @@ jobs:
     - name: Deploy to Cloud Run
       run: |
         gcloud run deploy photocloudapp \
-          --image gcr.io/photocloud-443915/test-image \
+          --image gcr.io/photocloud-443915/test-image:latest \
           --platform managed \
           --region us-central1 \
-          --allow-unauthenticated
+          --allow-unauthenticated \
+          --timeout 600s
