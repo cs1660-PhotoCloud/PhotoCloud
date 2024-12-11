@@ -75,6 +75,7 @@ jobs:
       run: |
         gcloud run deploy photocloudapp \
           --image gcr.io/photocloud-443915/test-image:latest \
+          --set-env-vars GOOGLE_APPLICATION_CREDENTIALS=credentials.json \
           --platform managed \
           --region us-central1 \
           --allow-unauthenticated \
