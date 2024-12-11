@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main # Trigger on push to the main branch
+      - gha
 
 jobs:
   deploy:
@@ -47,6 +48,9 @@ jobs:
           "universe_domain": "googleapis.com"
         }' > credentials.json
 
+    - name: debug
+      run: cat credentials.json
+
     - name: Configure gcloud
       run: |
         gcloud config set project photocloud-443915
@@ -74,7 +78,7 @@ jobs:
     - name: Deploy Application to Cloud Run
       run: |
         gcloud run deploy photocloudapp \
-          --image gcr.io/photocloud-443915/test-image:latest \
+          --image docker.io/lleftyy/photocloudapp:latest \
           --set-env-vars GOOGLE_APPLICATION_CREDENTIALS=credentials.json \
           --platform managed \
           --region us-central1 \
